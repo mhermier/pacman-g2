@@ -264,7 +264,6 @@ static int parse_descfile(char *descfile, pmpkg_t *info, int output)
 		line[0] = '\0';
 	}
 	fclose(fp);
-	unlink(descfile);
 
 	return(0);
 }
@@ -307,7 +306,7 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 		}
 		if(!strcmp(archive_entry_pathname (entry), ".PKGINFO")) {
 			char *descfile;
-			int fd;
+			int fd, parse_success;
 
 			/* extract this file into /tmp. it has info for us */
 			descfile = strdup("/tmp/pacman_XXXXXX");
@@ -315,33 +314,29 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 			archive_read_data_into_fd (archive, fd);
 			close(fd);
 			/* parse the info file */
-			if(parse_descfile(descfile, info, 0) == -1) {
+			parse_success = parse_descfile(descfile, info, 0);
+			unlink(descfile);
+			FREE(descfile);
+
+			if(parse_success == -1) {
 				_pacman_log(PM_LOG_ERROR, _("could not parse the package description file"));
 				pm_errno = PM_ERR_PKG_INVALID;
-				unlink(descfile);
-				FREE(descfile);
 				goto error;
 			}
 			if(!strlen(info->name)) {
 				_pacman_log(PM_LOG_ERROR, _("missing package name in %s"), pkgfile);
 				pm_errno = PM_ERR_PKG_INVALID;
-				unlink(descfile);
-				FREE(descfile);
 				goto error;
 			}
 			if(!strlen(info->version)) {
 				_pacman_log(PM_LOG_ERROR, _("missing package version in %s"), pkgfile);
 				pm_errno = PM_ERR_PKG_INVALID;
-				unlink(descfile);
-				FREE(descfile);
 				goto error;
 			}
 			if(handle->trans && !(handle->trans->flags & PM_TRANS_FLAG_NOARCH)) {
 				if(!strlen(info->arch)) {
 					_pacman_log(PM_LOG_ERROR, _("missing package architecture in %s"), pkgfile);
 					pm_errno = PM_ERR_PKG_INVALID;
-					unlink(descfile);
-					FREE(descfile);
 					goto error;
 				}
 
@@ -349,14 +344,10 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 				if(strncmp(name.machine, info->arch, strlen(info->arch))) {
 					_pacman_log(PM_LOG_ERROR, _("wrong package architecture in %s"), pkgfile);
 					pm_errno = PM_ERR_WRONG_ARCH;
-					unlink(descfile);
-					FREE(descfile);
 					goto error;
 				}
 			}
 			config = 1;
-			unlink(descfile);
-			FREE(descfile);
 			continue;
 		} else if(!strcmp(archive_entry_pathname (entry), "._install") || !strcmp(archive_entry_pathname (entry),  ".INSTALL")) {
 			info->scriptlet = 1;
