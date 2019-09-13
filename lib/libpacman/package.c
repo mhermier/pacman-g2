@@ -313,13 +313,13 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 			descfile = strdup("/tmp/pacman_XXXXXX");
 			fd = mkstemp(descfile);
 			archive_read_data_into_fd (archive, fd);
+			close(fd);
 			/* parse the info file */
 			if(parse_descfile(descfile, info, 0) == -1) {
 				_pacman_log(PM_LOG_ERROR, _("could not parse the package description file"));
 				pm_errno = PM_ERR_PKG_INVALID;
 				unlink(descfile);
 				FREE(descfile);
-				close(fd);
 				goto error;
 			}
 			if(!strlen(info->name)) {
@@ -327,7 +327,6 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 				pm_errno = PM_ERR_PKG_INVALID;
 				unlink(descfile);
 				FREE(descfile);
-				close(fd);
 				goto error;
 			}
 			if(!strlen(info->version)) {
@@ -335,7 +334,6 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 				pm_errno = PM_ERR_PKG_INVALID;
 				unlink(descfile);
 				FREE(descfile);
-				close(fd);
 				goto error;
 			}
 			if(handle->trans && !(handle->trans->flags & PM_TRANS_FLAG_NOARCH)) {
@@ -344,7 +342,6 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 					pm_errno = PM_ERR_PKG_INVALID;
 					unlink(descfile);
 					FREE(descfile);
-					close(fd);
 					goto error;
 				}
 
@@ -354,14 +351,12 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 					pm_errno = PM_ERR_WRONG_ARCH;
 					unlink(descfile);
 					FREE(descfile);
-					close(fd);
 					goto error;
 				}
 			}
 			config = 1;
 			unlink(descfile);
 			FREE(descfile);
-			close(fd);
 			continue;
 		} else if(!strcmp(archive_entry_pathname (entry), "._install") || !strcmp(archive_entry_pathname (entry),  ".INSTALL")) {
 			info->scriptlet = 1;
@@ -379,6 +374,7 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 			fn = strdup("/tmp/pacman_XXXXXX");
 			fd = mkstemp(fn);
 			archive_read_data_into_fd (archive,fd);
+			close(fd);
 			fp = fopen(fn, "r");
 			while(!feof(fp)) {
 				if(fgets(str, PATH_MAX, fp) == NULL) {
@@ -393,7 +389,6 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 				_pacman_log(PM_LOG_WARNING, _("could not remove tempfile %s"), fn);
 			}
 			FREE(fn);
-			close(fd);
 			filelist = 1;
 			continue;
 		} else {
