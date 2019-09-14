@@ -723,7 +723,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			if(strlen(cwd)) {
 				chdir(cwd);
 			}
-			archive_read_finish (archive);
+			archive_read_free(archive);
 
 			if(errors) {
 				ret = 1;

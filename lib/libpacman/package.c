@@ -295,7 +295,7 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 
 	info = _pacman_pkg_new(NULL, NULL);
 	if(info == NULL) {
-		archive_read_finish (archive);
+		archive_read_free(archive);
 		RET_ERR(PM_ERR_MEMORY, NULL);
 	}
 
@@ -398,7 +398,7 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 		}
 		expath = NULL;
 	}
-	archive_read_finish (archive);
+	archive_read_free(archive);
 
 	if(!config) {
 		_pacman_log(PM_LOG_ERROR, _("missing package info file in %s"), pkgfile);
@@ -415,7 +415,7 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 error:
 	FREEPKG(info);
 	if(!ret) {
-		archive_read_finish (archive);
+		archive_read_free(archive);
 	}
 	pm_errno = PM_ERR_PKG_CORRUPTED;
 

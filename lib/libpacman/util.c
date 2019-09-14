@@ -350,7 +350,7 @@ int _pacman_unpack(const char *archive, const char *prefix, const char *fn)
 			break;
 	}
 
-	archive_read_finish (_archive);
+	archive_read_free(_archive);
 
 	/* finally delete the old ones */
 	for (i = cache; i; i = i->next) {
