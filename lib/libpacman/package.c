@@ -290,7 +290,7 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 	archive_read_support_filter_all(archive);
 	archive_read_support_format_all (archive);
 
-	if ((ret = archive_read_open_file (archive, pkgfile, PM_DEFAULT_BYTES_PER_BLOCK)) != ARCHIVE_OK)
+	if ((ret = archive_read_open_filename(archive, pkgfile, PM_DEFAULT_BYTES_PER_BLOCK)) != ARCHIVE_OK)
 		RET_ERR(PM_ERR_PKG_OPEN, NULL);
 
 	info = _pacman_pkg_new(NULL, NULL);
