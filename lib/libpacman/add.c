@@ -109,7 +109,6 @@ static int add_faketarget(pmtrans_t *trans, const char *name)
 int _pacman_add_addtarget(pmtrans_t *trans, const char *name)
 {
 	pmpkg_t *info = NULL;
-	pmpkg_t *dummy;
 	pmlist_t *i;
 	pmpkg_t *local;
 	struct stat buf;
@@ -143,17 +142,18 @@ int _pacman_add_addtarget(pmtrans_t *trans, const char *name)
 		goto error;
 	}
 
+	local = _pacman_db_get_pkgfromcache(db, info->name);
+
 	if(trans->type != PM_TRANS_TYPE_UPGRADE) {
 		/* only install this package if it is not already installed */
-		if(_pacman_db_get_pkgfromcache(db, _pacman_pkg_getinfo(info, PM_PKG_NAME))) {
+		if(local != NULL) {
 			pm_errno = PM_ERR_PKG_INSTALLED;
 			goto error;
 		}
 	} else {
 		if(trans->flags & PM_TRANS_FLAG_FRESHEN) {
 			/* only upgrade/install this package if it is already installed and at a lesser version */
-			dummy = _pacman_db_get_pkgfromcache(db, _pacman_pkg_getinfo(info, PM_PKG_NAME));
-			if(dummy == NULL || _pacman_versioncmp(dummy->version, info->version) >= 0) {
+			if(local == NULL || _pacman_versioncmp(local->version, info->version) >= 0) {
 				pm_errno = PM_ERR_PKG_CANT_FRESH;
 				goto error;
 			}
@@ -188,7 +188,6 @@ int _pacman_add_addtarget(pmtrans_t *trans, const char *name)
 	}
 
 	/* copy over the install reason */
-	local =  _pacman_db_get_pkgfromcache(db, info->name);
 	if(local) {
 		info->reason = (long)_pacman_pkg_getinfo(local, PM_PKG_REASON);
 	}
