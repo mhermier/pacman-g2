@@ -420,7 +420,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			if ((archive = archive_read_new ()) == NULL)
 				RET_ERR(PM_ERR_LIBARCHIVE_ERROR, -1);
 
-			archive_read_support_compression_all (archive);
+			archive_read_support_filter_all(archive);
 			archive_read_support_format_all (archive);
 
 			if (archive_read_open_file (archive, info->data, PM_DEFAULT_BYTES_PER_BLOCK) != ARCHIVE_OK) {
