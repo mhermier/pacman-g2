@@ -102,6 +102,16 @@ static inline void *_pacman_zalloc(size_t size)
 	return ptr;
 }
 
+static inline char *_pacman_strdup(const char *str)
+{
+	size_t len = strlen(str) + 1;
+	char *dup = _pacman_malloc(len);
+
+	if (dup != NULL)
+		STRNCPY(dup, str, len);
+	return dup;
+}
+
 #endif /* _PACMAN_UTIL_H */
 
 /* vim: set ts=2 sw=2 noet: */
