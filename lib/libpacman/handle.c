@@ -132,23 +132,17 @@ int _pacman_handle_set_option(pmhandle_t *ph, unsigned char val, unsigned long d
 
 	switch(val) {
 		case PM_OPT_DBPATH:
-			if(ph->dbpath) {
-				FREE(ph->dbpath);
-			}
+			FREE(ph->dbpath);
 			ph->dbpath = strdup((data && strlen((char *)data) != 0) ? (char *)data : PM_DBPATH);
 			_pacman_log(PM_LOG_FLOW2, _("PM_OPT_DBPATH set to '%s'"), ph->dbpath);
 		break;
 		case PM_OPT_CACHEDIR:
-			if(ph->cachedir) {
-				FREE(ph->cachedir);
-			}
+			FREE(ph->cachedir);
 			ph->cachedir = strdup((data && strlen((char *)data) != 0) ? (char *)data : PM_CACHEDIR);
 			_pacman_log(PM_LOG_FLOW2, _("PM_OPT_CACHEDIR set to '%s'"), ph->cachedir);
 		break;
 		case PM_OPT_HOOKSDIR:
-			if(ph->hooksdir) {
-				FREE(ph->hooksdir);
-			}
+			FREE(ph->hooksdir);
 			ph->hooksdir = strdup((data && strlen((char *)data) != 0) ? (char *)data : PM_HOOKSDIR);
 			_pacman_log(PM_LOG_FLOW2, _("PM_OPT_HOOKSDIR set to '%s'"), ph->hooksdir);
 		break;
@@ -156,9 +150,7 @@ int _pacman_handle_set_option(pmhandle_t *ph, unsigned char val, unsigned long d
 			if((char *)data == NULL || ph->uid != 0) {
 				return(0);
 			}
-			if(ph->logfile) {
-				FREE(ph->logfile);
-			}
+			FREE(ph->logfile);
 			if(ph->logfd) {
 				if(fclose(ph->logfd) != 0) {
 					ph->logfd = NULL;
@@ -293,9 +285,7 @@ int _pacman_handle_set_option(pmhandle_t *ph, unsigned char val, unsigned long d
 			_pacman_log(PM_LOG_FLOW2, _("PM_OPT_LOGMASK set to '%02x'"), (unsigned char)data);
 		break;
 		case PM_OPT_PROXYHOST:
-			if(ph->proxyhost) {
-				FREE(ph->proxyhost);
-			}
+			FREE(ph->proxyhost);
 			p = strstr((char*)data, "://");
 			if(p) {
 				p += 3;
