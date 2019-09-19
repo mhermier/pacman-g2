@@ -540,13 +540,13 @@ int _pacman_db_read(pmdb_t *db, unsigned int inforeq, pmpkg_t *info)
 		return(-1);
 	}
 
-	snprintf(path, PATH_MAX, "%s/%s-%s", db->path, info->name, info->version);
-	if(islocal(db) && stat(path, &buf)) {
-		/* directory doesn't exist or can't be opened */
-		return(-1);
-	}
-
 	if (islocal(db)) {
+		snprintf(path, PATH_MAX, "%s/%s-%s", db->path, info->name, info->version);
+		if(stat(path, &buf)) {
+			/* directory doesn't exist or can't be opened */
+			return(-1);
+		}
+
 		if (_pacman_db_read_desc(db, inforeq, info) == -1)
 			return -1;
 
