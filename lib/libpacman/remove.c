@@ -202,12 +202,10 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 				const double percent = (double)file_index / file_count;
 				PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, (int)(percent * 100), package_count, package_index);
 
-				char *md5 =_pacman_needbackup(file, info->backup);
-				char *sha1 =_pacman_needbackup(file, info->backup);
-				if(md5 && sha1) {
+				char *hash = _pacman_needbackup(file, info->backup);
+				if(hash != NULL) {
 					nb = 1;
-					FREE(md5);
-					FREE(sha1);
+					FREE(hash);
 				}
 				if(!nb && trans->type == PM_TRANS_TYPE_UPGRADE) {
 					/* check noupgrade */
