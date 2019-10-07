@@ -12,8 +12,22 @@ DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 AM_CFLAGS = -D_GNU_SOURCE \
 	-I$(top_srcdir)/lib/libpacman
 
-pacman_g2_SOURCES = util.c log.c list.c package.c download.c trans.c add.c \
-	remove.c upgrade.c query.c sync.c ps.c conf.c deptest.c pacman-g2.c
+pacman_g2_SOURCES = \
+	add.c \
+	conf.c \
+	deptest.c \
+	download.c \
+	list.c \
+	log.c \
+	package.c \
+	pacman-g2.c \
+	ps.c \
+	query.c \
+	remove.c \
+	sync.c \
+	trans.c \
+	upgrade.c \
+	util.c
 
 pacman_g2_static_SOURCES = $(pacman_g2_SOURCES)
 

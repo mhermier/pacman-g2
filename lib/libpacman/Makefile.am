@@ -7,32 +7,33 @@ SUBDIRS = po
 localedir = $(datadir)/locale
 DEFS = -DLOCALEDIR=\"$(localedir)\" @DEFS@
 
-TARGETS = md5driver.c \
-	md5.c \
-	sha1.c \
-	util.c \
-	list.c \
-	log.c \
-	error.c \
-	package.c \
-	group.c \
-	db.c \
+TARGETS = \
+	add.c \
+	backup.c \
+	be_files.c \
 	cache.c \
 	conflict.c \
+	db.c \
 	deps.c \
-	provide.c \
-	versioncmp.c \
-	backup.c \
+	error.c \
+	group.c \
+	handle.c \
+	list.c \
+	log.c \
+	md5.c \
+	md5driver.c \
+	package.c \
 	packages_transaction.c \
+	pacman.c \
+	provide.c \
+	remove.c \
+	server.c \
+	sha1.c \
+	sync.c \
 	trans.c \
 	trans_sysupgrade.c \
-	add.c \
-	remove.c \
-	sync.c \
-	handle.c \
-	server.c \
-	pacman.c \
-	be_files.c
+	util.c \
+	versioncmp.c
 
 lib_LTLIBRARIES = libpacman.la
 
