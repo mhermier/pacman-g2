@@ -233,14 +233,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 					/* check the "skip list" before removing the file.
 					 * see the big comment block in db_find_conflicts() for an
 					 * explanation. */
-					int skipit = 0;
-					pmlist_t *j;
-					for(j = trans->skiplist; j; j = j->next) {
-						if(!strcmp(file, (char*)j->data)) {
-							skipit = 1;
-						}
-					}
-					if(skipit) {
+					if (_pacman_list_is_strin(file, trans->skiplist)) {
 						_pacman_log(PM_LOG_FLOW2, _("skipping removal of %s as it has moved to another package"),
 							file);
 					} else {
