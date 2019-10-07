@@ -546,7 +546,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 						if(!file) continue;
 						if(!strcmp(file, pathname)) {
-						    if(info->sha1sum != NULL && info->sha1sum != '\0') {
+							if (info->sha1sum[0] != '\0') {
 							/* 32 for the hash, 1 for the terminating NULL, and 1 for the tab delimiter */
 							if((fn = (char *)malloc(strlen(file)+34)) == NULL) {
 								RET_ERR(PM_ERR_MEMORY, -1);
@@ -566,7 +566,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 						}
 					}
 
-					if (info->sha1sum != NULL && info->sha1sum != '\0') {
+					if (info->sha1sum[0] != '\0') {
 					_pacman_log(PM_LOG_DEBUG, _("checking md5 hashes for %s"), pathname);
 					_pacman_log(PM_LOG_DEBUG, _("current:  %s"), md5_local);
 					_pacman_log(PM_LOG_DEBUG, _("new:      %s"), md5_pkg);
@@ -691,7 +691,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 						if(!strcmp(file, pathname)) {
 							_pacman_log(PM_LOG_DEBUG, _("appending backup entry"));
 							snprintf(path, PATH_MAX, "%s%s", handle->root, file);
-							if (info->sha1sum != NULL && info->sha1sum != '\0') {
+							if (info->sha1sum[0] != '\0') {
 							    md5 = _pacman_MDFile(path);
 							    /* 32 for the hash, 1 for the terminating NULL, and 1 for the tab delimiter */
 							    if((fn = (char *)malloc(strlen(file)+34)) == NULL) {
