@@ -201,14 +201,11 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 			/* iterate through the list backwards, unlinking files */
 			for(lp = _pacman_list_last(info->files); lp; lp = lp->prev) {
 				int nb = 0;
-				double percent;
 				char *file = lp->data;
 				char *md5 =_pacman_needbackup(file, info->backup);
 				char *sha1 =_pacman_needbackup(file, info->backup);
 
-				if (position != 0) {
-				percent = (double)position / filenum;
-				}
+				const double percent = (double)position / filenum;
 				if(md5 && sha1) {
 					nb = 1;
 					FREE(md5);
