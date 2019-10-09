@@ -408,7 +408,7 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 	/* internal */
 	info->origin = PKG_FROM_FILE;
 	info->data = strdup(pkgfile);
-	info->infolevel = 0xFF;
+	info->infolevel = INFRQ_ALL;
 
 	return(info);
 
