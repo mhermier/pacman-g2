@@ -293,7 +293,9 @@ void cb_trans_conv(unsigned char event, void *data1, void *data2, void *data3, i
 /* FIXME: log10() want float .. */
 void cb_trans_progress(unsigned char event, const char *pkgname, int percent, int count, int remaining)
 {
-	static int prevpercent=0; /* for less progressbar output */
+	/* for less progressbar output */
+	static int prevevent = -1, prevremaining = 0, prevpercent = 0;
+
 	int i, hash;
 	unsigned int maxpkglen, progresslen = maxcols - 57;
 	char *addstr, *upgstr, *removestr, *conflictstr, *interconflictstr, *ptr, *pkgname_short;
@@ -310,9 +312,11 @@ void cb_trans_progress(unsigned char event, const char *pkgname, int percent, in
 
 	if (!pkgname)
 		goto cleanup;
-	if ((percent > 100) || (percent < 0) || (percent == prevpercent))
+	if ((percent > 100) || (percent < 0) || ((event == prevevent) && (remaining == prevremaining) && (percent == prevpercent)))
 		goto cleanup;
 
+	prevevent = event;
+	prevremaining = remaining;
 	prevpercent=percent;
 	switch (event) {
 		case PM_TRANS_PROGRESS_ADD_START:
