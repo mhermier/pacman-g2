@@ -443,8 +443,8 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 				STRNCPY(pathname, archive_entry_pathname (entry), PATH_MAX);
 
-				if (info->size != 0) {
-					double percent = (double)archive_filter_bytes(archive, 0) / info->size;
+				if (info->usize != 0) {
+					double percent = (double)archive_filter_bytes(archive, -1) / info->usize;
 					PROGRESS(trans, cb_state, what, (int)(percent * 100), howmany, (howmany - remain +1));
 				}
 
