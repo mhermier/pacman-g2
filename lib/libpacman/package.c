@@ -405,6 +405,11 @@ pmpkg_t *_pacman_pkg_load(const char *pkgfile)
 		goto error;
 	}
 
+	struct stat buf;
+	if(stat(pkgfile, &buf) == 0 && S_ISREG(buf.st_mode)) {
+		info->usize = buf.st_size;
+	}
+
 	/* internal */
 	info->origin = PKG_FROM_FILE;
 	info->data = strdup(pkgfile);
