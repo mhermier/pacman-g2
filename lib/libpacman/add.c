@@ -304,7 +304,6 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 {
 	int i, ret = 0, errors = 0;
 	int remain, howmany, archive_ret;
-	double percent;
 	register struct archive *archive;
 	struct archive_entry *entry;
 	char expath[PATH_MAX], cwd[PATH_MAX] = "", *what;
@@ -444,9 +443,10 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 				STRNCPY(pathname, archive_entry_pathname (entry), PATH_MAX);
 
-				if (info->size != 0)
-		    			percent = (double)archive_filter_bytes(archive, 0) / info->size;
+				if (info->size != 0) {
+					double percent = (double)archive_filter_bytes(archive, 0) / info->size;
 					PROGRESS(trans, cb_state, what, (int)(percent * 100), howmany, (howmany - remain +1));
+				}
 
 				if(!strcmp(pathname, ".PKGINFO") || !strcmp(pathname, ".FILELIST")) {
 					archive_read_data_skip (archive);
