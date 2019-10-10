@@ -38,7 +38,7 @@ documentation and/or software.
 #define MDUpdate _pacman_MD5Update
 #define MDFinal _pacman_MD5Final
 
-char* _pacman_MDFile(char *filename)
+char* _pacman_MDFile(const char *filename)
 {
 	FILE *file;
 	MD_CTX context;

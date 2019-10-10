@@ -384,7 +384,7 @@ documentation and/or software.
  */
 
 
-char* _pacman_SHAFile(char *filename) {
+char* _pacman_SHAFile(const char *filename) {
     FILE *file;
     struct sha_ctx context;
     int len = 0, i, x;

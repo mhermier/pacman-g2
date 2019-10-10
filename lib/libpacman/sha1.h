@@ -57,4 +57,4 @@ struct sha_ctx
 
 
 /* Needed for pacman-g2 */
-char *_pacman_SHAFile (char *);
+char *_pacman_SHAFile (const char *);

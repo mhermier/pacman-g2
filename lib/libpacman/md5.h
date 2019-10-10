@@ -44,7 +44,7 @@ void _pacman_MD5Init(MD5_CTX *);
 void _pacman_MD5Update(MD5_CTX *, unsigned char *, unsigned int);
 void _pacman_MD5Final(unsigned char [16], MD5_CTX *);
 
-char* _pacman_MDFile(char *);
+char* _pacman_MDFile(const char *);
 void  _pacman_MDPrint(unsigned char [16]);
 
 /* vim: set ts=2 sw=2 noet: */
