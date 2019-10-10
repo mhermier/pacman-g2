@@ -291,10 +291,10 @@ void cb_trans_conv(unsigned char event, void *data1, void *data2, void *data3, i
 }
 
 /* FIXME: log10() want float .. */
-void cb_trans_progress(unsigned char event, const char *pkgname, int percent, int count, int remaining)
+void cb_trans_progress(unsigned char event, const char *pkgname, int percent, int count, int index)
 {
 	/* for less progressbar output */
-	static int prevevent = -1, prevremaining = 0, prevpercent = 0;
+	static int prevevent = -1, previndex = 0, prevpercent = 0;
 
 	int i, hash;
 	unsigned int maxpkglen, progresslen = maxcols - 57;
@@ -312,11 +312,11 @@ void cb_trans_progress(unsigned char event, const char *pkgname, int percent, in
 
 	if (!pkgname)
 		goto cleanup;
-	if ((percent > 100) || (percent < 0) || ((event == prevevent) && (remaining == prevremaining) && (percent == prevpercent)))
+	if ((percent > 100) || (percent < 0) || ((event == prevevent) && (index == previndex) && (percent == prevpercent)))
 		goto cleanup;
 
 	prevevent = event;
-	prevremaining = remaining;
+	previndex = index;
 	prevpercent=percent;
 	switch (event) {
 		case PM_TRANS_PROGRESS_ADD_START:
@@ -352,9 +352,9 @@ void cb_trans_progress(unsigned char event, const char *pkgname, int percent, in
 	case PM_TRANS_PROGRESS_UPGRADE_START:
 	case PM_TRANS_PROGRESS_REMOVE_START:
 		putchar('(');
-		for(i=0;i<(int)log10(count)-(int)log10(remaining);i++)
+		for(i=0;i<(int)log10(count)-(int)log10(index);i++)
 			putchar(' ');
-		printf("%d/%d) %s %s ", remaining, count, ptr, pkgname_short);
+		printf("%d/%d) %s %s ", index, count, ptr, pkgname_short);
 		if (strlen(pkgname_short)<maxpkglen)
 			for (i=maxpkglen-strlen(pkgname_short)-1; i>0; i--)
 				putchar(' ');
@@ -363,9 +363,9 @@ void cb_trans_progress(unsigned char event, const char *pkgname, int percent, in
 	case PM_TRANS_PROGRESS_INTERCONFLICTS_START:
 	case PM_TRANS_PROGRESS_CONFLICTS_START:
 		printf("%s (", ptr);
-		for(i=0;i<(int)log10(count)-(int)log10(remaining);i++)
+		for(i=0;i<(int)log10(count)-(int)log10(index);i++)
 			putchar(' ');
-		printf("%d/%d) ", remaining, count);
+		printf("%d/%d) ", index, count);
 		for (i=maxpkglen; i>0; i--)
 			putchar(' ');
 		break;
@@ -381,7 +381,7 @@ void cb_trans_progress(unsigned char event, const char *pkgname, int percent, in
 	MSG(CL, "] %3d%%\r", percent);
 	/* avoid adding a new line for the last package */
 	if(percent == 100 && (event == PM_TRANS_PROGRESS_ADD_START || event ==
-			PM_TRANS_PROGRESS_UPGRADE_START) && remaining != count) {
+			PM_TRANS_PROGRESS_UPGRADE_START) && index != count) {
 		MSG(NL, "");
 	}
 

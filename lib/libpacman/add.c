@@ -303,13 +303,13 @@ int _pacman_add_prepare(pmtrans_t *trans, pmlist_t **data)
 int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 {
 	int i, ret = 0, errors = 0;
-	int remain, howmany, archive_ret;
+	int archive_ret;
 	register struct archive *archive;
 	struct archive_entry *entry;
 	char expath[PATH_MAX], cwd[PATH_MAX] = "", *what;
 	unsigned char cb_state;
 	time_t t;
-	pmlist_t *targ, *lp;
+	pmlist_t *lp;
 	pmdb_t *db = trans->handle->db_local;
 
 	ASSERT(trans != NULL, RET_ERR(PM_ERR_TRANS_NULL, -1));
@@ -319,14 +319,14 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 		return(0);
 	}
 
-	for(targ = trans->packages; targ; targ = targ->next) {
+	const size_t package_count = _pacman_list_count(trans->packages);
+	size_t package_index = 1;
+	for(const pmlist_t *targ = trans->packages; targ; targ = targ->next, package_index++) {
 		unsigned short pmo_upgrade;
 		char pm_install[PATH_MAX];
 		pmpkg_t *info = (pmpkg_t *)targ->data;
 		pmpkg_t *oldpkg = NULL;
 		errors = 0;
-		remain = _pacman_list_count(targ);
-		howmany = _pacman_list_count(trans->packages);
 
 		if(handle->trans->state == STATE_INTERRUPTED) {
 			break;
@@ -445,7 +445,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 				if (info->usize != 0) {
 					double percent = (double)archive_filter_bytes(archive, -1) / info->usize;
-					PROGRESS(trans, cb_state, what, (int)(percent * 100), howmany, (howmany - remain +1));
+					PROGRESS(trans, cb_state, what, (int)(percent * 100), package_count, package_index);
 				}
 
 				if(!strcmp(pathname, ".PKGINFO") || !strcmp(pathname, ".FILELIST")) {
@@ -727,7 +727,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 				pacman_logaction(_("errors occurred while %s %s"),
 					(pmo_upgrade ? _("upgrading") : _("installing")), info->name);
 			} else {
-			PROGRESS(trans, cb_state, what, 100, howmany, howmany - remain + 1);
+			PROGRESS(trans, cb_state, what, 100, package_count, package_index);
 			}
 		}
 

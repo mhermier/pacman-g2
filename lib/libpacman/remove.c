@@ -160,28 +160,24 @@ static int str_cmp(const void *s1, const void *s2)
 
 int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 {
-	pmpkg_t *info;
 	struct stat buf;
-	pmlist_t *targ, *lp;
+	pmlist_t *lp;
 	char line[PATH_MAX+1];
-	int howmany, remain;
 	pmdb_t *db = trans->handle->db_local;
 
 	ASSERT(db != NULL, RET_ERR(PM_ERR_DB_NULL, -1));
 	ASSERT(trans != NULL, RET_ERR(PM_ERR_TRANS_NULL, -1));
 
-	howmany = _pacman_list_count(trans->packages);
-
-	for(targ = trans->packages; targ; targ = targ->next) {
+	const size_t package_count = _pacman_list_count(trans->packages);
+	size_t package_index = 1;
+	for(const pmlist_t *targ = trans->packages; targ; targ = targ->next, package_index++) {
 		int position = 0;
 		char pm_install[PATH_MAX];
-		info = (pmpkg_t*)targ->data;
+		pmpkg_t *info = (pmpkg_t*)targ->data;
 
 		if(handle->trans->state == STATE_INTERRUPTED) {
 			break;
 		}
-
-		remain = _pacman_list_count(targ);
 
 		if(trans->type != PM_TRANS_TYPE_UPGRADE) {
 			EVENT(trans, PM_TRANS_EVT_REMOVE_START, info, NULL);
@@ -258,7 +254,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 						} else {
 							_pacman_log(PM_LOG_FLOW2, _("unlinking %s"), file);
 							/* Need at here because we count only real unlinked files ? */
-							PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, (int)(percent * 100), howmany, howmany - remain + 1);
+							PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, (int)(percent * 100), package_count, package_index);
 							position++;
 							if(unlink(line)) {
 								_pacman_log(PM_LOG_ERROR, _("cannot remove file %s"), file);
@@ -269,7 +265,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 			}
 		}
 
-		PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, 100, howmany, howmany - remain + 1);
+		PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, 100, package_count, package_index);
 		if(trans->type != PM_TRANS_TYPE_UPGRADE) {
 			/* run the post-remove script if it exists */
 			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
