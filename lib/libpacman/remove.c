@@ -171,7 +171,6 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 	const size_t package_count = _pacman_list_count(trans->packages);
 	size_t package_index = 1;
 	for(const pmlist_t *targ = trans->packages; targ; targ = targ->next, package_index++) {
-		int position = 0;
 		char pm_install[PATH_MAX];
 		pmpkg_t *info = (pmpkg_t*)targ->data;
 
@@ -191,17 +190,20 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 		}
 
 		if(!(trans->flags & PM_TRANS_FLAG_DBONLY)) {
-			int filenum = _pacman_list_count(info->files);
 			_pacman_log(PM_LOG_FLOW1, _("removing files"));
 
+			const int file_count = _pacman_list_count(info->files);
+			int file_index = 0;
 			/* iterate through the list backwards, unlinking files */
-			for(lp = _pacman_list_last(info->files); lp; lp = lp->prev) {
+			for(lp = _pacman_list_last(info->files); lp; lp = lp->prev, file_index++) {
 				int nb = 0;
 				char *file = lp->data;
+
+				const double percent = (double)file_index / file_count;
+				PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, (int)(percent * 100), package_count, package_index);
+
 				char *md5 =_pacman_needbackup(file, info->backup);
 				char *sha1 =_pacman_needbackup(file, info->backup);
-
-				const double percent = (double)position / filenum;
 				if(md5 && sha1) {
 					nb = 1;
 					FREE(md5);
@@ -253,9 +255,6 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 							}
 						} else {
 							_pacman_log(PM_LOG_FLOW2, _("unlinking %s"), file);
-							/* Need at here because we count only real unlinked files ? */
-							PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, (int)(percent * 100), package_count, package_index);
-							position++;
 							if(unlink(line)) {
 								_pacman_log(PM_LOG_ERROR, _("cannot remove file %s"), file);
 							}
