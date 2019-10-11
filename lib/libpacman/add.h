@@ -23,6 +23,8 @@
 
 #include "trans.h"
 
+int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data);
+
 const pmtrans_ops_t _pacman_add_pmtrans_opts;
 
 #endif /* _PACMAN_ADD_H */
