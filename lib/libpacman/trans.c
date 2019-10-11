@@ -98,6 +98,7 @@ void _pacman_trans_free(pmtrans_t *trans)
 	}
 
 	FREELIST(trans->skiplist);
+	FREELIST(trans->entries);
 
 	_pacman_trans_fini(trans);
 	free(trans);
@@ -221,6 +222,42 @@ int _pacman_trans_prepare(pmtrans_t *trans, pmlist_t **data)
 	return(0);
 }
 
+static void _pacman_trans_populate_entries(pmtrans_t *trans)
+{
+	pmdb_t *db = trans->handle->db_local;
+
+	for(const pmlist_t *targ = trans->packages; targ; targ = targ->next) {
+		pmpkg_t *info = (pmpkg_t*)targ->data;
+		pm_transaction_entry_t *entry = _pacman_zalloc(sizeof(*entry));
+
+		entry->type = trans->type;
+		entry->flags = trans->flags;
+		switch(trans->type) {
+		case PM_TRANS_TYPE_REMOVE:
+			entry->pkg_to_uninstall = info;
+			break;
+		case PM_TRANS_TYPE_ADD:
+			entry->pkg_to_install = info;
+			break;
+		case PM_TRANS_TYPE_UPGRADE:
+			entry->pkg_to_uninstall = _pacman_db_get_pkgfromcache(db, info->name);
+			entry->pkg_to_install = info;
+
+			if(entry->pkg_to_uninstall == NULL) {
+				/* no previous package version is installed, so this is actually
+				 * just an install. */
+				entry->type = PM_TRANS_TYPE_ADD;
+			}
+			break;
+		default:
+			/* internal error */
+			abort();
+		}
+
+		trans->entries = _pacman_list_add(trans->entries, entry);
+	}
+}
+
 /* Helper function for comparing strings
  */
 static int str_cmp(const void *s1, const void *s2)
@@ -238,28 +275,33 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 	ASSERT(db != NULL, RET_ERR(PM_ERR_DB_NULL, -1));
 	ASSERT(trans != NULL, RET_ERR(PM_ERR_TRANS_NULL, -1));
 
-	const size_t package_count = _pacman_list_count(trans->packages);
+	_pacman_trans_populate_entries(trans);
+
+	const size_t package_count = _pacman_list_count(trans->entries);
 	size_t package_index = 1;
-	for(const pmlist_t *targ = trans->packages; targ; targ = targ->next, package_index++) {
+	for(const pmlist_t *targ = trans->entries; targ; targ = targ->next, package_index++) {
 		char pm_install[PATH_MAX];
-		pmpkg_t *info = (pmpkg_t*)targ->data;
+		const pm_transaction_entry_t *entry = targ->data;
+		const pmtranstype_t type = entry->type;
+		const unsigned int flags = entry->flags;
+		pmpkg_t *info = entry->pkg_to_uninstall;
 
 		if(handle->trans->state == STATE_INTERRUPTED) {
 			break;
 		}
 
-		if(trans->type == PM_TRANS_TYPE_REMOVE) {
+		if(type == PM_TRANS_TYPE_REMOVE) {
 			EVENT(trans, PM_TRANS_EVT_REMOVE_START, info, NULL);
 			_pacman_log(PM_LOG_FLOW1, _("removing package %s-%s"), info->name, info->version);
 
 			/* run the pre-remove scriptlet if it exists */
-			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
+			if(info->scriptlet && !(flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 				snprintf(pm_install, PATH_MAX, "%s/%s-%s/install", db->path, info->name, info->version);
 				_pacman_runscriptlet(pm_install, "pre_remove", info->version, NULL, trans);
 			}
 		}
 
-		if(!(trans->flags & PM_TRANS_FLAG_DBONLY)) {
+		if(!(flags & PM_TRANS_FLAG_DBONLY)) {
 			_pacman_log(PM_LOG_FLOW1, _("removing files"));
 
 			const int file_count = _pacman_list_count(info->files);
@@ -277,7 +319,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 					nb = 1;
 					FREE(hash);
 				}
-				if(!nb && trans->type == PM_TRANS_TYPE_UPGRADE) {
+				if(!nb && type == PM_TRANS_TYPE_UPGRADE) {
 					/* check noupgrade */
 					if(_pacman_list_is_strin(file, handle->noupgrade)) {
 						nb = 1;
@@ -305,10 +347,10 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 					} else {
 						/* if the file is flagged, back it up to .pacsave */
 						if(nb) {
-							if(trans->type == PM_TRANS_TYPE_UPGRADE) {
+							if(type == PM_TRANS_TYPE_UPGRADE) {
 								/* we're upgrading so just leave the file as is. pacman_add() will handle it */
 							} else {
-								if(!(trans->flags & PM_TRANS_FLAG_NOSAVE)) {
+								if(!(flags & PM_TRANS_FLAG_NOSAVE)) {
 									char newpath[PATH_MAX];
 									snprintf(newpath, PATH_MAX, "%s.pacsave", line);
 									rename(line, newpath);
@@ -333,9 +375,9 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 		}
 
 		PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, 100, package_count, package_index);
-		if(trans->type == PM_TRANS_TYPE_REMOVE) {
+		if(type == PM_TRANS_TYPE_REMOVE) {
 			/* run the post-remove script if it exists */
-			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
+			if(info->scriptlet && !(flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 				/* must run ldconfig here because some scriptlets fail due to missing libs otherwise */
 				_pacman_ldconfig();
 				snprintf(pm_install, PATH_MAX, "%s/%s-%s/install", db->path, info->name, info->version);
@@ -397,7 +439,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 			}
 		}
 
-		if(trans->type == PM_TRANS_TYPE_REMOVE) {
+		if(type == PM_TRANS_TYPE_REMOVE) {
 			EVENT(trans, PM_TRANS_EVT_REMOVE_DONE, info, NULL);
 		}
 	}
@@ -429,12 +471,17 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 		return(0);
 	}
 
-	const size_t package_count = _pacman_list_count(trans->packages);
+	_pacman_trans_populate_entries(trans);
+
+	const size_t package_count = _pacman_list_count(trans->entries);
 	size_t package_index = 1;
-	for(const pmlist_t *targ = trans->packages; targ; targ = targ->next, package_index++) {
+	for(const pmlist_t *targ = trans->entries; targ; targ = targ->next, package_index++) {
 		char pm_install[PATH_MAX];
-		pmtranstype_t type = trans->type;
-		pmpkg_t *info = (pmpkg_t *)targ->data;
+		const pm_transaction_entry_t *transaction_entry = targ->data;
+		const pmtranstype_t type = transaction_entry->type;
+		const unsigned int flags = transaction_entry->flags;
+		pmpkg_t *local = transaction_entry->pkg_to_uninstall;
+		pmpkg_t *info = transaction_entry->pkg_to_install;
 		pmpkg_t *oldpkg = NULL;
 		errors = 0;
 
@@ -444,7 +491,6 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 		/* see if this is an upgrade.  if so, remove the old package first */
 		if(type == PM_TRANS_TYPE_UPGRADE) {
-			pmpkg_t *local = _pacman_db_get_pkgfromcache(db, info->name);
 			if(local) {
 				EVENT(trans, PM_TRANS_EVT_UPGRADE_START, info, NULL);
 				cb_state = PM_TRANS_PROGRESS_UPGRADE_START;
@@ -466,7 +512,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 				}
 
 				/* pre_upgrade scriptlet */
-				if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
+				if(info->scriptlet && !(flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 					_pacman_runscriptlet(info->data, "pre_upgrade", info->version, oldpkg ? oldpkg->version : NULL,
 						trans);
 				}
@@ -479,7 +525,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 						RET_ERR(PM_ERR_TRANS_ABORT, -1);
 					}
 					pmtrans_cbs_t null_cbs = { NULL };
-					if(_pacman_trans_init(tr, PM_TRANS_TYPE_UPGRADE, trans->flags, null_cbs) == -1) {
+					if(_pacman_trans_init(tr, PM_TRANS_TYPE_UPGRADE, flags, null_cbs) == -1) {
 						FREETRANS(tr);
 						RET_ERR(PM_ERR_TRANS_ABORT, -1);
 					}
@@ -495,10 +541,6 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 					}
 					FREETRANS(tr);
 				}
-			} else {
-				/* no previous package version is installed, so this is actually
-				 * just an install.  */
-				type = PM_TRANS_TYPE_ADD;
 			}
 		}
 		if(type == PM_TRANS_TYPE_ADD) {
@@ -510,14 +552,14 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			}
 
 			/* pre_install scriptlet */
-			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
+			if(info->scriptlet && !(flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 				_pacman_runscriptlet(info->data, "pre_install", info->version, NULL, trans);
 			}
 		} else {
 			_pacman_log(PM_LOG_FLOW1, _("adding new package %s-%s"), info->name, info->version);
 		}
 
-		if(!(trans->flags & PM_TRANS_FLAG_DBONLY)) {
+		if(!(flags & PM_TRANS_FLAG_DBONLY)) {
 			_pacman_log(PM_LOG_FLOW1, _("extracting files"));
 
 			/* Extract the package */
@@ -764,7 +806,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 						pacman_logaction(_("warning: extracting %s%s as %s"), handle->root, pathname, expath);
 						/*tar_skip_regfile(tar);*/
 					}
-					if(trans->flags & PM_TRANS_FLAG_FORCE) {
+					if(flags & PM_TRANS_FLAG_FORCE) {
 						/* if FORCE was used, then unlink() each file (whether it's there
 						 * or not) before extracting.  this prevents the old "Text file busy"
 						 * error that crops up if one tries to --force a glibc or pacman-g2
@@ -910,7 +952,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 		FREE(what);
 
 		/* run the post-install script if it exists  */
-		if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
+		if(info->scriptlet && !(flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 			/* must run ldconfig here because some scriptlets fail due to missing libs otherwise */
 			_pacman_ldconfig();
 			snprintf(pm_install, PATH_MAX, "%s%s/%s/%s-%s/install", handle->root, handle->dbpath, db->treename, info->name, info->version);

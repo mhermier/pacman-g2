@@ -46,6 +46,8 @@ extern "C" {
  * Structures (opaque)
  */
 
+typedef struct __pm_transaction_entry_t      pm_transaction_entry_t;
+
 typedef struct __pmlist_t PM_LIST;
 typedef struct __pmdb_t PM_DB;
 typedef struct __pmpkg_t PM_PKG;
@@ -347,7 +349,8 @@ enum {
 	PM_TRANS_TYPE = 1,
 	PM_TRANS_FLAGS,
 	PM_TRANS_TARGETS,
-	PM_TRANS_PACKAGES
+	PM_TRANS_PACKAGES,
+	PM_TRANS_ENTRIES
 };
 
 void *pacman_trans_getinfo(unsigned char parm);
@@ -357,6 +360,27 @@ int pacman_trans_addtarget(const char *target);
 int pacman_trans_prepare(PM_LIST **data);
 int pacman_trans_commit(PM_LIST **data);
 int pacman_trans_release(void);
+
+/*
+ * Transaction entries
+ */
+
+/* Types */
+enum {
+	PM_TRANSACTION_ENTRY_TYPE_REMOVE = 1,
+	PM_TRANSACTION_ENTRY_TYPE_INSTALL,
+	PM_TRANSACTION_ENTRY_TYPE_UPGRADE
+};
+
+/* Info parameters */
+enum {
+	PM_TRANSACTION_ENTRY_TYPE = 1,
+	PM_TRANSACTION_ENTRY_FLAGS,
+	PM_TRANSACTION_ENTRY_PACKAGE_TO_INSTALL,
+	PM_TRANSACTION_ENTRY_PACKAGE_TO_UNINSTALL
+};
+
+void *pacman_transaction_entry_getinfo(pm_transaction_entry_t *entry, unsigned char parm);
 
 /*
  * Dependencies and conflicts

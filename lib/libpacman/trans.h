@@ -52,6 +52,13 @@ typedef struct __pmtrans_cbs_t {
 	pacman_trans_cb_progress progress;
 } pmtrans_cbs_t;
 
+struct __pm_transaction_entry_t {
+	pmtranstype_t type;
+	unsigned int flags;
+	pmpkg_t *pkg_to_uninstall;
+	pmpkg_t *pkg_to_install;
+};
+
 struct __pmtrans_t {
 	const pmtrans_ops_t *ops;
 	int (*set_state)(pmtrans_t *trans, int new_state);
@@ -61,6 +68,7 @@ struct __pmtrans_t {
 	unsigned char state;
 	pmlist_t *targets;     /* pmlist_t of (char *) */
 	pmlist_t *packages;    /* pmlist_t of (pmpkg_t *) or (pmsyncpkg_t *) */
+	pmlist_t *entries;     /* pmlist_t of (pm_transaction_entry_t *) */
 	pmlist_t *skiplist;    /* pmlist_t of (char *) */
 	pmtrans_cbs_t cbs;
 };

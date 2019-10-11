@@ -677,6 +677,7 @@ void *pacman_trans_getinfo(unsigned char parm)
 		case PM_TRANS_FLAGS:    data = (void *)(long)trans->flags; break;
 		case PM_TRANS_TARGETS:  data = trans->targets; break;
 		case PM_TRANS_PACKAGES: data = trans->packages; break;
+		case PM_TRANS_ENTRIES:  data = trans->entries; break;
 		default:
 			data = NULL;
 		break;
@@ -844,6 +845,36 @@ int pacman_trans_release()
 	}
 
 	return(0);
+}
+/** @} */
+
+/** @defgroup pacman_transaction_entry Transaction Entries Functions
+ * @brief Functions to get information about a libpacman transaction entry
+ * @{
+ */
+
+/** Get information about the transaction.
+ * @param parm name of the info to get
+ * @return a void* on success (the value), NULL on error
+ */
+void *pacman_transaction_entry_getinfo(pm_transaction_entry_t *entry, unsigned char parm)
+{
+	void *data;
+
+	/* Sanity checks */
+	ASSERT(entry != NULL, return(NULL));
+
+	switch(parm) {
+		case PM_TRANSACTION_ENTRY_TYPE:                 data = (void *)(long)entry->type; break;
+		case PM_TRANSACTION_ENTRY_FLAGS:                data = (void *)(long)entry->flags; break;
+		case PM_TRANSACTION_ENTRY_PACKAGE_TO_INSTALL:   data = entry->pkg_to_install; break;
+		case PM_TRANSACTION_ENTRY_PACKAGE_TO_UNINSTALL: data = entry->pkg_to_uninstall; break;
+		default:
+			data = NULL;
+		break;
+	}
+
+	return(data);
 }
 /** @} */
 
