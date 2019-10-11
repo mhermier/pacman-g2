@@ -248,7 +248,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 			break;
 		}
 
-		if(trans->type != PM_TRANS_TYPE_UPGRADE) {
+		if(trans->type == PM_TRANS_TYPE_REMOVE) {
 			EVENT(trans, PM_TRANS_EVT_REMOVE_START, info, NULL);
 			_pacman_log(PM_LOG_FLOW1, _("removing package %s-%s"), info->name, info->version);
 
@@ -333,7 +333,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 		}
 
 		PROGRESS(trans, PM_TRANS_PROGRESS_REMOVE_START, info->name, 100, package_count, package_index);
-		if(trans->type != PM_TRANS_TYPE_UPGRADE) {
+		if(trans->type == PM_TRANS_TYPE_REMOVE) {
 			/* run the post-remove script if it exists */
 			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 				/* must run ldconfig here because some scriptlets fail due to missing libs otherwise */
@@ -397,13 +397,13 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 			}
 		}
 
-		if(trans->type != PM_TRANS_TYPE_UPGRADE) {
+		if(trans->type == PM_TRANS_TYPE_REMOVE) {
 			EVENT(trans, PM_TRANS_EVT_REMOVE_DONE, info, NULL);
 		}
 	}
 
 	/* run ldconfig if it exists */
-	if((trans->type != PM_TRANS_TYPE_UPGRADE) && (handle->trans->state != STATE_INTERRUPTED)) {
+	if((trans->type == PM_TRANS_TYPE_REMOVE) && (handle->trans->state != STATE_INTERRUPTED)) {
 		_pacman_ldconfig();
 	}
 
