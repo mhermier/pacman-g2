@@ -21,6 +21,9 @@
 #ifndef _PACMAN_LIST_H
 #define _PACMAN_LIST_H
 
+#include <stdbool.h>
+#include <stddef.h>
+
 /* Chained list struct */
 typedef struct __pmlist_t {
 	void *data;
@@ -42,9 +45,9 @@ void _pacman_list_free(pmlist_t *list, _pacman_fn_free fn);
 pmlist_t *_pacman_list_add(pmlist_t *list, void *data);
 pmlist_t *_pacman_list_add_sorted(pmlist_t *list, void *data, _pacman_fn_cmp fn);
 pmlist_t *_pacman_list_remove(pmlist_t *haystack, void *needle, _pacman_fn_cmp fn, void **data);
-int _pacman_list_count(pmlist_t *list);
-int _pacman_list_is_in(void *needle, pmlist_t *haystack);
-int _pacman_list_is_strin(const char *needle, pmlist_t *haystack);
+size_t _pacman_list_count(const pmlist_t *list);
+bool _pacman_list_is_in(void *needle, const pmlist_t *haystack);
+bool _pacman_list_is_strin(const char *needle, const pmlist_t *haystack);
 pmlist_t *_pacman_list_last(pmlist_t *list);
 pmlist_t *_pacman_list_remove_dupes(pmlist_t *list);
 pmlist_t *_pacman_list_reverse(pmlist_t *list);
