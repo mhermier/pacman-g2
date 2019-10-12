@@ -255,7 +255,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 			/* run the pre-remove scriptlet if it exists */
 			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 				snprintf(pm_install, PATH_MAX, "%s/%s-%s/install", db->path, info->name, info->version);
-				_pacman_runscriptlet(handle->root, pm_install, "pre_remove", info->version, NULL, trans);
+				_pacman_runscriptlet(pm_install, "pre_remove", info->version, NULL, trans);
 			}
 		}
 
@@ -339,7 +339,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 				/* must run ldconfig here because some scriptlets fail due to missing libs otherwise */
 				_pacman_ldconfig(handle->root);
 				snprintf(pm_install, PATH_MAX, "%s/%s-%s/install", db->path, info->name, info->version);
-				_pacman_runscriptlet(handle->root, pm_install, "post_remove", info->version, NULL, trans);
+				_pacman_runscriptlet(pm_install, "post_remove", info->version, NULL, trans);
 			}
 		}
 
@@ -469,7 +469,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 				/* pre_upgrade scriptlet */
 				if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
-					_pacman_runscriptlet(handle->root, info->data, "pre_upgrade", info->version, oldpkg ? oldpkg->version : NULL,
+					_pacman_runscriptlet(info->data, "pre_upgrade", info->version, oldpkg ? oldpkg->version : NULL,
 						trans);
 				}
 
@@ -513,7 +513,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 			/* pre_install scriptlet */
 			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
-				_pacman_runscriptlet(handle->root, info->data, "pre_install", info->version, NULL, trans);
+				_pacman_runscriptlet(info->data, "pre_install", info->version, NULL, trans);
 			}
 		} else {
 			_pacman_log(PM_LOG_FLOW1, _("adding new package %s-%s"), info->name, info->version);
@@ -919,9 +919,9 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			_pacman_ldconfig(handle->root);
 			snprintf(pm_install, PATH_MAX, "%s%s/%s/%s-%s/install", handle->root, handle->dbpath, db->treename, info->name, info->version);
 			if(pmo_upgrade) {
-				_pacman_runscriptlet(handle->root, pm_install, "post_upgrade", info->version, oldpkg ? oldpkg->version : NULL, trans);
+				_pacman_runscriptlet(pm_install, "post_upgrade", info->version, oldpkg ? oldpkg->version : NULL, trans);
 			} else {
-				_pacman_runscriptlet(handle->root, pm_install, "post_install", info->version, NULL, trans);
+				_pacman_runscriptlet(pm_install, "post_install", info->version, NULL, trans);
 			}
 		}
 

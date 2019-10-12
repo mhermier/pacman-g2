@@ -484,8 +484,9 @@ static int grep(const char *fn, const char *needle)
 	return(0);
 }
 
-int _pacman_runscriptlet(char *root, char *installfn, const char *script, char *ver, char *oldver, pmtrans_t *trans)
+int _pacman_runscriptlet(const char *installfn, const char *script, const char *ver, const char *oldver, pmtrans_t *trans)
 {
+	const char *root = handle->root;
 	char scriptfn[PATH_MAX];
 	char cmdline[PATH_MAX];
 	char tmpdir[PATH_MAX] = "";

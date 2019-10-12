@@ -71,7 +71,7 @@ int _pacman_rmrf(char *path);
 int _pacman_logaction(unsigned char usesyslog, FILE *f, char *fmt, ...);
 int _pacman_ldconfig(char *root);
 #ifdef _PACMAN_TRANS_H
-int _pacman_runscriptlet(char *util, char *installfn, const char *script, char *ver, char *oldver, pmtrans_t *trans);
+int _pacman_runscriptlet(const char *installfn, const char *script, const char *ver, const char *oldver, pmtrans_t *trans);
 int _pacman_runhook(const char *hookname, pmtrans_t *trans);
 #ifndef __sun__
 int _pacman_check_freespace(pmtrans_t *trans, pmlist_t **data);
