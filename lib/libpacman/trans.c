@@ -432,8 +432,8 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 	const size_t package_count = _pacman_list_count(trans->packages);
 	size_t package_index = 1;
 	for(const pmlist_t *targ = trans->packages; targ; targ = targ->next, package_index++) {
-		unsigned short pmo_upgrade;
 		char pm_install[PATH_MAX];
+		pmtranstype_t type = trans->type;
 		pmpkg_t *info = (pmpkg_t *)targ->data;
 		pmpkg_t *oldpkg = NULL;
 		errors = 0;
@@ -442,10 +442,8 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			break;
 		}
 
-		pmo_upgrade = (trans->type == PM_TRANS_TYPE_UPGRADE) ? 1 : 0;
-
 		/* see if this is an upgrade.  if so, remove the old package first */
-		if(pmo_upgrade) {
+		if(type == PM_TRANS_TYPE_UPGRADE) {
 			pmpkg_t *local = _pacman_db_get_pkgfromcache(db, info->name);
 			if(local) {
 				EVENT(trans, PM_TRANS_EVT_UPGRADE_START, info, NULL);
@@ -500,10 +498,10 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			} else {
 				/* no previous package version is installed, so this is actually
 				 * just an install.  */
-				pmo_upgrade = 0;
+				type = PM_TRANS_TYPE_ADD;
 			}
 		}
-		if(!pmo_upgrade) {
+		if(type == PM_TRANS_TYPE_ADD) {
 			EVENT(trans, PM_TRANS_EVT_ADD_START, info, NULL);
 			cb_state = PM_TRANS_PROGRESS_ADD_START;
 			_pacman_log(PM_LOG_FLOW1, _("adding package %s-%s"), info->name, info->version);
@@ -603,7 +601,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 						if(_pacman_list_is_strin(pathname, handle->noupgrade)) {
 							notouch = 1;
 						} else {
-							if(!pmo_upgrade || oldpkg == NULL) {
+							if(type == PM_TRANS_TYPE_ADD || oldpkg == NULL) {
 								nb = _pacman_list_is_strin(pathname, info->backup);
 							} else {
 								/* op == PM_TRANS_TYPE_UPGRADE */
@@ -684,9 +682,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 						_pacman_log(PM_LOG_DEBUG, _("original: %s"), hash_orig);
 					}
 
-					if(!pmo_upgrade) {
-						/* PM_ADD */
-
+					if(type == PM_TRANS_TYPE_ADD) {
 						/* if a file already exists with a different md5 or sha1 hash,
 						 * then we rename it to a .pacorig extension and continue */
 						if(strcmp(md5_local, md5_pkg) || strcmp(sha1_local, sha1_pkg)) {
@@ -826,9 +822,9 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			if(errors) {
 				ret = 1;
 				_pacman_log(PM_LOG_WARNING, _("errors occurred while %s %s"),
-					(pmo_upgrade ? _("upgrading") : _("installing")), info->name);
+					(type == PM_TRANS_TYPE_UPGRADE ? _("upgrading") : _("installing")), info->name);
 				pacman_logaction(_("errors occurred while %s %s"),
-					(pmo_upgrade ? _("upgrading") : _("installing")), info->name);
+					(type == PM_TRANS_TYPE_UPGRADE ? _("upgrading") : _("installing")), info->name);
 			} else {
 			PROGRESS(trans, cb_state, what, 100, package_count, package_index);
 			}
@@ -918,14 +914,14 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 			/* must run ldconfig here because some scriptlets fail due to missing libs otherwise */
 			_pacman_ldconfig();
 			snprintf(pm_install, PATH_MAX, "%s%s/%s/%s-%s/install", handle->root, handle->dbpath, db->treename, info->name, info->version);
-			if(pmo_upgrade) {
+			if(type == PM_TRANS_TYPE_UPGRADE) {
 				_pacman_runscriptlet(pm_install, "post_upgrade", info->version, oldpkg ? oldpkg->version : NULL, trans);
 			} else {
 				_pacman_runscriptlet(pm_install, "post_install", info->version, NULL, trans);
 			}
 		}
 
-		EVENT(trans, (pmo_upgrade) ? PM_TRANS_EVT_UPGRADE_DONE : PM_TRANS_EVT_ADD_DONE, info, oldpkg);
+		EVENT(trans, (type == PM_TRANS_TYPE_UPGRADE) ? PM_TRANS_EVT_UPGRADE_DONE : PM_TRANS_EVT_ADD_DONE, info, oldpkg);
 
 		FREEPKG(oldpkg);
 	}
