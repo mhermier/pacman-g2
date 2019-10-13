@@ -251,8 +251,9 @@ static pmlist_t *chk_fileconflicts(pmlist_t *filesA, pmlist_t *filesB)
 	return(ret);
 }
 
-pmlist_t *_pacman_db_find_conflicts(pmdb_t *db, pmtrans_t *trans, char *root, pmlist_t **skip_list)
+pmlist_t *_pacman_db_find_conflicts(pmdb_t *db, pmtrans_t *trans, pmlist_t **skip_list)
 {
+	const char *root = handle->root;
 	pmlist_t *i, *j, *k;
 	char *filestr = NULL;
 	char path[PATH_MAX+1];

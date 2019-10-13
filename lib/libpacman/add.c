@@ -273,7 +273,7 @@ int _pacman_add_prepare(pmtrans_t *trans, pmlist_t **data)
 		EVENT(trans, PM_TRANS_EVT_FILECONFLICTS_START, NULL, NULL);
 
 		_pacman_log(PM_LOG_FLOW1, _("looking for file conflicts"));
-		lp = _pacman_db_find_conflicts(db, trans, handle->root, &skiplist);
+		lp = _pacman_db_find_conflicts(db, trans, &skiplist);
 		if(lp != NULL) {
 			if(data) {
 				*data = lp;
