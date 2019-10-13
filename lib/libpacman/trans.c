@@ -337,7 +337,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 			/* run the post-remove script if it exists */
 			if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 				/* must run ldconfig here because some scriptlets fail due to missing libs otherwise */
-				_pacman_ldconfig(handle->root);
+				_pacman_ldconfig();
 				snprintf(pm_install, PATH_MAX, "%s/%s-%s/install", db->path, info->name, info->version);
 				_pacman_runscriptlet(pm_install, "post_remove", info->version, NULL, trans);
 			}
@@ -404,7 +404,7 @@ int _pacman_remove_commit(pmtrans_t *trans, pmlist_t **data)
 
 	/* run ldconfig if it exists */
 	if((trans->type != PM_TRANS_TYPE_UPGRADE) && (handle->trans->state != STATE_INTERRUPTED)) {
-		_pacman_ldconfig(handle->root);
+		_pacman_ldconfig();
 	}
 
 	return(0);
@@ -916,7 +916,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 		/* run the post-install script if it exists  */
 		if(info->scriptlet && !(trans->flags & PM_TRANS_FLAG_NOSCRIPTLET)) {
 			/* must run ldconfig here because some scriptlets fail due to missing libs otherwise */
-			_pacman_ldconfig(handle->root);
+			_pacman_ldconfig();
 			snprintf(pm_install, PATH_MAX, "%s%s/%s/%s-%s/install", handle->root, handle->dbpath, db->treename, info->name, info->version);
 			if(pmo_upgrade) {
 				_pacman_runscriptlet(pm_install, "post_upgrade", info->version, oldpkg ? oldpkg->version : NULL, trans);
@@ -932,7 +932,7 @@ int _pacman_add_commit(pmtrans_t *trans, pmlist_t **data)
 
 	/* run ldconfig if it exists */
 	if(handle->trans->state != STATE_INTERRUPTED) {
-		_pacman_ldconfig(handle->root);
+		_pacman_ldconfig();
 	}
 
 	return(ret);

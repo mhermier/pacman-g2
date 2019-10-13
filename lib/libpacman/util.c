@@ -439,8 +439,9 @@ int _pacman_logaction(unsigned char usesyslog, FILE *f, char *fmt, ...)
 	return(0);
 }
 
-int _pacman_ldconfig(char *root)
+int _pacman_ldconfig(void)
 {
+	const char *root = handle->root;
 	char line[PATH_MAX];
 	struct stat buf;
 
